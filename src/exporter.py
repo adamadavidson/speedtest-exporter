@@ -7,6 +7,8 @@ from prometheus_client import make_wsgi_app, Gauge
 from flask import Flask
 from waitress import serve
 from shutil import which
+from urllib.request import urlopen
+from urllib import error
 
 app = Flask("Speedtest-Exporter")  # Create flask app
 
@@ -94,6 +96,19 @@ def runTest():
                 actual_ping = data['ping']['latency']
                 download = bytes_to_bits(data['download']['bandwidth'])
                 upload = bytes_to_bits(data['upload']['bandwidth'])
+                PING_URL = os.environ.get('PING_URL')
+                PING_URL_TIMEOUT = int(os.environ.get('PING_URL_TIMEOUT', 10))
+                if PING_URL:
+                    try:
+                        urlopen(f'{PING_URL}', timeout={PING_URL_TIMEOUT})
+                    except (error.HTTPError, error.URLError) as err:
+                        logging.error(f'Ping failed to send to {PING_URL} ({err.code}: {err.reason}).')
+                    except:
+                        logging.error(f'Ping failed to send to {PING_URL}. An unknown error occurred.')
+                    else:
+                        logging.info(f'Ping sent successfully to {PING_URL}')
+                else:
+                    logging.info('No PING_URL set.')
                 return (actual_server, actual_jitter, actual_ping, download,
                         upload, 1)
 
