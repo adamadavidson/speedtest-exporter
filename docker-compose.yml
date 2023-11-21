@@ -1,0 +1,12 @@
+version: "3"
+services:
+  speedtest_exporter:
+    build: .
+    container_name: monitoring_speedtest_exporter
+    hostname: monitoring_speedtest_exporter
+    ports:
+      - 9798:9798
+    environment:
+      - PING_URL= #Optional URL for using healthcheck.io or similar cron monitoring to perform GET requests after a successful test.
+      - PING_URL_TIMEOUT=10 #Optional timeout period in seconds: Default is 10 if not set.
+    restart: unless-stopped
